@@ -6,8 +6,8 @@ A small browser-playable survival automation prototype inspired by colony builde
 
 - Place extractors on resource deposits.
 - Connect every structure back to the command hub with conveyors.
-- Refine regolith into concrete and turn ice into water and oxygen.
-- Balance power, oxygen, water, food, housing, and medicine while colonists arrive.
+- Mine ore, ice, and silica to feed construction and life support.
+- Balance power, oxygen, water, food, and housing while colonists arrive.
 - Survive dust storms and raider waves as threat pressure rises.
 
 ## Run locally
@@ -33,4 +33,4 @@ The tests cover the simulation layer that powers production, logistics connectiv
 3. Use conveyors to connect new structures to the hub.
 4. Watch the colony status panel and event log for warnings.
 
-Resource deposits are color coded on the map. Extractors only work when built next to a matching deposit, and processors only run if they can receive inputs over the connected logistics network.
+Resource deposits are color coded on the map. Extractors and kilns only work on matching terrain, and all production structures must stay connected to the hub over the logistics network.

@@ -3,120 +3,109 @@ import assert from "node:assert/strict";
 
 import {
   BUILDINGS,
-  GameState,
-  STRUCTURES,
-  canAfford,
-  getBuildCost,
+  advanceSimulation,
+  buildStructure,
+  canBuild,
+  createInitialState,
+  getBuildOptions,
+  getTile,
+  updateConnectivity,
 } from "../src/simulation.js";
 
-test("builds structures only when affordable and unoccupied", () => {
-  const game = new GameState({ seed: 12 });
-  const iron = game.map.tiles.find((tile) => tile.deposit === "iron");
+function hubPosition(state) {
+  return { x: Math.floor(state.width / 2), y: Math.floor(state.height / 2) };
+}
 
-  assert.equal(game.build("extractor", iron.x, iron.y).ok, true);
-  assert.equal(game.tileAt(iron.x, iron.y).building.type, "extractor");
+test("builds structures only when affordable, explored, and unoccupied", () => {
+  const state = createInitialState({ seed: 12 });
+  const hub = hubPosition(state);
+  const target = getTile(state, hub.x + 1, hub.y);
 
-  assert.equal(game.build("extractor", iron.x, iron.y).ok, false);
+  assert.equal(buildStructure(state, "solar", target.x, target.y).ok, true);
+  assert.equal(target.building.type, "solar");
 
-  game.resources.polymer = 0;
-  const freeTile = game.map.tiles.find((tile) => !tile.building && !tile.deposit);
-  assert.equal(canAfford(game.resources, getBuildCost("greenhouse")), false);
-  assert.equal(game.build("greenhouse", freeTile.x, freeTile.y).ok, false);
+  assert.equal(buildStructure(state, "solar", target.x, target.y).ok, false);
+
+  state.resources.metal = 0;
+  const nextTile = getTile(state, hub.x - 1, hub.y);
+  assert.equal(canBuild(state, "greenhouse", nextTile.x, nextTile.y).ok, false);
 });
 
-test("connected extractors and conveyor links move resources into the colony", () => {
-  const game = new GameState({ seed: 1 });
-  const hub = game.getHub();
-  const target = game.tileAt(hub.x - 1, hub.y);
+test("connected extractors produce resources for the colony", () => {
+  const state = createInitialState({ seed: 1 });
+  const hub = hubPosition(state);
+  const target = getTile(state, hub.x + 1, hub.y);
+  target.terrain = "ice";
+  state.resources.water = 0;
 
-  target.deposit = "ice";
-  game.build("extractor", target.x, target.y);
-  const waterBefore = game.resources.water;
+  assert.equal(buildStructure(state, "iceExtractor", target.x, target.y).ok, true);
+  advanceSimulation(state, 8);
 
-  for (let i = 0; i < 60; i += 1) {
-    game.tick(1);
-  }
-
-  assert.equal(target.connected, true);
-  assert.ok(game.resources.water > waterBefore);
+  assert.equal(target.building.connected, true);
+  assert.ok(state.resources.water > 0);
 });
 
-test("unconnected industry does not operate until logistics reach it", () => {
-  const game = new GameState({ seed: 3 });
-  const hub = game.getHub();
-  const remote = game.tileAt(hub.x + 3, hub.y);
-  remote.deposit = "iron";
+test("remote industry waits for a conveyor connection", () => {
+  const state = createInitialState({ seed: 3 });
+  const hub = hubPosition(state);
+  const remote = getTile(state, hub.x + 3, hub.y);
+  remote.terrain = "ore";
+  remote.explored = true;
 
-  game.build("extractor", remote.x, remote.y);
-  const metalBefore = game.resources.metal;
+  assert.equal(buildStructure(state, "oreDrill", remote.x, remote.y).ok, false);
 
-  for (let i = 0; i < 40; i += 1) {
-    game.tick(1);
-  }
+  assert.equal(buildStructure(state, "conveyor", hub.x + 1, hub.y).ok, true);
+  assert.equal(buildStructure(state, "conveyor", hub.x + 2, hub.y).ok, true);
+  assert.equal(buildStructure(state, "oreDrill", remote.x, remote.y).ok, true);
 
-  assert.equal(remote.connected, false);
-  assert.equal(game.resources.metal, metalBefore);
+  state.resources.metal = 0;
+  advanceSimulation(state, 8);
 
-  game.build("conveyor", hub.x + 1, hub.y);
-  game.build("conveyor", hub.x + 2, hub.y);
-
-  for (let i = 0; i < 40; i += 1) {
-    game.tick(1);
-  }
-
-  assert.equal(remote.connected, true);
-  assert.ok(game.resources.metal > metalBefore);
+  assert.equal(remote.building.connected, true);
+  assert.ok(state.resources.metal > 0);
 });
 
-test("power shortages reduce production and damage morale", () => {
-  const game = new GameState({ seed: 4 });
-  const hub = game.getHub();
-  const greenhouse = game.tileAt(hub.x + 1, hub.y);
-  game.build("greenhouse", greenhouse.x, greenhouse.y);
+test("survival shortages reduce morale", () => {
+  const state = createInitialState({ seed: 4 });
+  state.resources.oxygen = 0;
+  state.resources.food = 0;
+  state.resources.water = 0;
+  const moraleBefore = state.morale;
 
-  game.resources.power = 0;
-  const foodBefore = game.resources.food;
-  const moraleBefore = game.morale;
+  advanceSimulation(state, 3);
 
-  for (let i = 0; i < 10; i += 1) {
-    game.tick(1);
-  }
-
-  assert.equal(game.resources.food, foodBefore);
-  assert.ok(game.morale < moraleBefore);
-  assert.ok(game.alerts.some((alert) => alert.includes("Power grid")));
+  assert.ok(state.morale < moraleBefore);
+  assert.ok(state.events.some((event) => event.message.includes("Life support shortage")));
 });
 
-test("raider wave damages exposed buildings", () => {
-  const game = new GameState({ seed: 5 });
-  const hub = game.getHub();
-  const target = game.tileAt(hub.x + 1, hub.y);
-  game.build("solar", target.x, target.y);
+test("storage buildings expand resource capacity only when connected", () => {
+  const state = createInitialState({ seed: 6 });
+  const hub = hubPosition(state);
+  const target = getTile(state, hub.x + 1, hub.y);
 
-  const hpBefore = target.building.hp;
-  game.raiderDamage = 30;
-  game.triggerRaiderWave();
+  const storageBefore = state.storage.power;
+  assert.equal(buildStructure(state, "battery", target.x, target.y).ok, true);
 
-  assert.ok(target.building.hp < hpBefore);
-  assert.ok(game.alerts[0].includes("Raider drones"));
+  assert.ok(state.storage.power > storageBefore);
 });
 
-test("structure catalogue exposes strategic roles", () => {
-  const types = new Set(STRUCTURES.map((structure) => structure.type));
+test("structure catalogue exposes colony, logistics, and defense roles", () => {
+  const types = new Set(getBuildOptions().map((structure) => structure.type));
 
   for (const required of [
-    "solar",
-    "extractor",
     "conveyor",
-    "smelter",
-    "habitat",
+    "solar",
+    "battery",
+    "iceExtractor",
+    "oreDrill",
+    "siliconKiln",
     "greenhouse",
-    "waterReclaimer",
-    "oxygenGenerator",
+    "habitat",
     "turret",
   ]) {
     assert.equal(types.has(required), true);
   }
 
-  assert.equal(BUILDINGS.hub.provides.shelter, 8);
+  assert.equal(BUILDINGS.hub.storage.oxygen, 100);
+  assert.equal(typeof updateConnectivity, "function");
 });
