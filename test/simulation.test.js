@@ -16,10 +16,14 @@ function hubPosition(state) {
   return { x: Math.floor(state.width / 2), y: Math.floor(state.height / 2) };
 }
 
+function tileAt(state, x, y) {
+  return getTile(state.map, x, y);
+}
+
 test("builds structures only when affordable, explored, and unoccupied", () => {
   const state = createInitialState({ seed: 12 });
   const hub = hubPosition(state);
-  const target = getTile(state, hub.x + 1, hub.y);
+  const target = tileAt(state, hub.x + 1, hub.y);
 
   assert.equal(buildStructure(state, "solar", target.x, target.y).ok, true);
   assert.equal(target.building.type, "solar");
@@ -27,14 +31,14 @@ test("builds structures only when affordable, explored, and unoccupied", () => {
   assert.equal(buildStructure(state, "solar", target.x, target.y).ok, false);
 
   state.resources.metal = 0;
-  const nextTile = getTile(state, hub.x - 1, hub.y);
+  const nextTile = tileAt(state, hub.x - 1, hub.y);
   assert.equal(canBuild(state, "greenhouse", nextTile.x, nextTile.y).ok, false);
 });
 
 test("connected extractors produce resources for the colony", () => {
   const state = createInitialState({ seed: 1 });
   const hub = hubPosition(state);
-  const target = getTile(state, hub.x + 1, hub.y);
+  const target = tileAt(state, hub.x + 1, hub.y);
   target.terrain = "ice";
   state.resources.water = 0;
 
@@ -48,7 +52,7 @@ test("connected extractors produce resources for the colony", () => {
 test("remote industry waits for a conveyor connection", () => {
   const state = createInitialState({ seed: 3 });
   const hub = hubPosition(state);
-  const remote = getTile(state, hub.x + 3, hub.y);
+  const remote = tileAt(state, hub.x + 3, hub.y);
   remote.terrain = "ore";
   remote.explored = true;
 
@@ -81,7 +85,7 @@ test("survival shortages reduce morale", () => {
 test("storage buildings expand resource capacity only when connected", () => {
   const state = createInitialState({ seed: 6 });
   const hub = hubPosition(state);
-  const target = getTile(state, hub.x + 1, hub.y);
+  const target = tileAt(state, hub.x + 1, hub.y);
 
   const storageBefore = state.storage.power;
   assert.equal(buildStructure(state, "battery", target.x, target.y).ok, true);

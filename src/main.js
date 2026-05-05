@@ -6,7 +6,6 @@ import {
   canBuild,
   createInitialState,
   getBuildOptions,
-  getTile,
   getTileSummary,
 } from "./simulation.js";
 
