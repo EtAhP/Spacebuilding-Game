@@ -1,0 +1,11 @@
+{
+  "name": "spacebuilding-game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "validate": "node --check src/main.js && node --check src/simulation.js && node --check sw.js && node --test",
+    "serve": "python3 -m http.server 8080"
+  }
+}

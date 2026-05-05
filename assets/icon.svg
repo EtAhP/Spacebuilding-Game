@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Ares Colony icon</title>
+  <desc id="desc">A stylized Mars dome colony with solar arrays.</desc>
+  <rect width="512" height="512" rx="112" fill="#111520" />
+  <circle cx="258" cy="288" r="186" fill="#6f3f2d" />
+  <path d="M80 356c68-56 123-82 181-82 57 0 108 26 171 82v58H80z" fill="#f28f3b" />
+  <path d="M164 346c9-69 43-113 97-113s88 44 97 113z" fill="#dff7ff" opacity=".88" />
+  <path d="M192 346c8-44 30-70 69-70s61 26 69 70z" fill="#70d6ff" opacity=".55" />
+  <path d="M92 320h88M340 320h88M118 284h54M350 284h54" stroke="#ffd166" stroke-width="24" stroke-linecap="round" />
+  <circle cx="398" cy="128" r="30" fill="#ffd166" />
+  <path d="M142 118h80M182 78v80M326 166h48M350 142v48" stroke="#e8f1ff" stroke-width="16" stroke-linecap="round" opacity=".72" />
+</svg>

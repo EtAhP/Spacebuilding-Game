@@ -1,0 +1,19 @@
+{
+  "name": "Ares Colony",
+  "short_name": "Ares",
+  "description": "A high-end Android-ready Mars colony survival builder prototype.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#111520",
+  "theme_color": "#f28f3b",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
