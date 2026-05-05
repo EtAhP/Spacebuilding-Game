@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ares Outpost Prototype</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hud">
+        <div>
+          <p class="eyebrow">Ares Outpost</p>
+          <h1>Survive, automate, expand.</h1>
+        </div>
+        <div id="resource-bar" class="resource-bar" aria-live="polite"></div>
+      </section>
+
+      <section class="game-layout">
+        <aside class="panel">
+          <h2>Build menu</h2>
+          <div id="build-menu" class="build-menu"></div>
+          <div class="help-card">
+            <h3>How to play</h3>
+            <ul>
+              <li>Select a structure, then click a tile to build.</li>
+              <li>Extractors need nearby resource deposits.</li>
+              <li>Everything must connect to the hub through conveyors.</li>
+              <li>Keep power, oxygen, food, and water positive as threats intensify.</li>
+            </ul>
+          </div>
+        </aside>
+
+        <section class="colony-stage">
+          <canvas id="game-canvas" width="960" height="640" aria-label="Mars colony game board"></canvas>
+          <div id="tile-panel" class="tile-panel"></div>
+        </section>
+
+        <aside class="panel">
+          <h2>Colony status</h2>
+          <div id="status-panel" class="status-grid"></div>
+          <h2>Event log</h2>
+          <ol id="event-log" class="event-log"></ol>
+        </aside>
+      </section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
