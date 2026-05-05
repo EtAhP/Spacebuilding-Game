@@ -16,9 +16,14 @@ const buildMenu = document.querySelector("#build-menu");
 const statusPanel = document.querySelector("#status-panel");
 const tilePanel = document.querySelector("#tile-panel");
 const eventLog = document.querySelector("#event-log");
+const installButton = document.querySelector("#install-button");
+const fullscreenButton = document.querySelector("#fullscreen-button");
 
 const state = createInitialState();
 let hoveredTile = null;
+let deferredInstallPrompt = null;
+let renderWidth = canvas.width;
+let renderHeight = canvas.height;
 
 const terrainColors = {
   [TERRAIN_TYPES.BASALT]: "#594943",
@@ -83,6 +88,25 @@ function renderBuildMenu() {
   }
 }
 
+function resizeCanvas() {
+  const stage = canvas.parentElement;
+  const availableWidth = Math.max(320, stage.clientWidth - 28);
+  const availableHeight = Math.max(280, window.innerHeight - 220);
+  const aspectRatio = state.width / state.height;
+  const desiredWidth = Math.min(availableWidth, availableHeight * aspectRatio);
+  const desiredHeight = desiredWidth / aspectRatio;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 3);
+
+  renderWidth = Math.floor(desiredWidth);
+  renderHeight = Math.floor(desiredHeight);
+  canvas.style.width = `${renderWidth}px`;
+  canvas.style.height = `${renderHeight}px`;
+  canvas.width = Math.floor(renderWidth * pixelRatio);
+  canvas.height = Math.floor(renderHeight * pixelRatio);
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  drawBoard();
+}
+
 function renderResources() {
   resourceBar.innerHTML = "";
   for (const [resource, amount] of Object.entries(state.resources)) {
@@ -143,8 +167,8 @@ function renderTilePanel() {
 }
 
 function drawBoard() {
-  const tileSize = Math.min(canvas.width / state.width, canvas.height / state.height);
-  context.clearRect(0, 0, canvas.width, canvas.height);
+  const tileSize = Math.min(renderWidth / state.width, renderHeight / state.height);
+  context.clearRect(0, 0, renderWidth, renderHeight);
 
   for (const row of state.map) {
     for (const tile of row) {
@@ -221,26 +245,67 @@ function refresh() {
   drawBoard();
 }
 
-canvas.addEventListener("mousemove", (event) => {
+canvas.addEventListener("pointermove", (event) => {
   hoveredTile = getPointerTile(event);
   renderTilePanel();
   drawBoard();
 });
 
-canvas.addEventListener("mouseleave", () => {
+canvas.addEventListener("pointerleave", () => {
   hoveredTile = null;
   renderTilePanel();
   drawBoard();
 });
 
-canvas.addEventListener("click", (event) => {
+canvas.addEventListener("pointerup", (event) => {
+  event.preventDefault();
   const tile = getPointerTile(event);
   buildStructure(state, state.selectedBuild, tile.x, tile.y);
   renderBuildMenu();
   refresh();
 });
 
+window.addEventListener("resize", resizeCanvas);
+window.addEventListener("orientationchange", () => {
+  window.setTimeout(resizeCanvas, 150);
+});
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  installButton.hidden = false;
+});
+
+installButton.addEventListener("click", async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  installButton.hidden = true;
+});
+
+fullscreenButton.addEventListener("click", async () => {
+  if (!document.fullscreenEnabled) return;
+
+  if (document.fullscreenElement) {
+    await document.exitFullscreen();
+    return;
+  }
+
+  await document.documentElement.requestFullscreen().catch(() => {});
+  if (screen.orientation?.lock) {
+    screen.orientation.lock("landscape").catch(() => {});
+  }
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+
 renderBuildMenu();
+resizeCanvas();
 refresh();
 
 let previousTime = performance.now();

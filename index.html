@@ -2,8 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ares Outpost Prototype</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111520" />
+    <meta
+      name="description"
+      content="A touch-first Mars survival colony builder prototype for high-end Android devices."
+    />
+    <title>Ares Outpost Mobile Prototype</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
@@ -11,7 +18,7 @@
       <section class="hud">
         <div>
           <p class="eyebrow">Ares Outpost</p>
-          <h1>Survive, automate, expand.</h1>
+          <h1>Build a living Mars colony.</h1>
         </div>
         <div id="resource-bar" class="resource-bar" aria-live="polite"></div>
       </section>
@@ -23,16 +30,25 @@
           <div class="help-card">
             <h3>How to play</h3>
             <ul>
-              <li>Select a structure, then click a tile to build.</li>
+              <li>Select a structure, then tap a tile to build.</li>
               <li>Extractors need nearby resource deposits.</li>
               <li>Everything must connect to the hub through conveyors.</li>
               <li>Keep power, oxygen, food, and water positive as threats intensify.</li>
             </ul>
+            <div class="action-row">
+              <button id="install-button" class="utility-button" type="button" hidden>Install on Android</button>
+              <button id="fullscreen-button" class="utility-button" type="button">Fullscreen</button>
+            </div>
           </div>
         </aside>
 
         <section class="colony-stage">
-          <canvas id="game-canvas" width="960" height="640" aria-label="Mars colony game board"></canvas>
+          <canvas
+            id="game-canvas"
+            width="960"
+            height="640"
+            aria-label="Mars colony game board"
+          ></canvas>
           <div id="tile-panel" class="tile-panel"></div>
         </section>
 
